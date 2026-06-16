@@ -1,0 +1,158 @@
+import type { Duty, Expense, Group, GroupSummary, Settlement } from "./types";
+
+type ExpensePayload = Omit<Expense, "id" | "currency" | "date">;
+type DutyPayload = Omit<Duty, "id">;
+
+async function api<T>(path: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(path, {
+    ...init,
+    headers: {
+      "Content-Type": "application/json",
+      ...(init?.headers ?? {}),
+    },
+  });
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(data?.error || "Request failed.");
+  }
+
+  return data as T;
+}
+
+export async function getGroups() {
+  const data = await api<{ groups: Group[] }>("/api/groups");
+  return data.groups;
+}
+
+export async function getGroupSummaries() {
+  const data = await api<{ groups: GroupSummary[] }>("/api/groups/summary");
+  return data.groups;
+}
+
+export async function getGroup(groupId: string) {
+  const data = await api<{ group: Group }>(`/api/groups/${groupId}`);
+  return data.group;
+}
+
+export async function createGroup(name: string, currency: string) {
+  const data = await api<{ group: Group }>("/api/groups", {
+    method: "POST",
+    body: JSON.stringify({ name, currency }),
+  });
+  return data.group;
+}
+
+export async function deleteGroup(groupId: string) {
+  await api<{ ok: true }>(`/api/groups/${groupId}`, { method: "DELETE" });
+}
+
+export async function removeMember(groupId: string, memberId: string) {
+  const data = await api<{ group: Group }>(`/api/groups/${groupId}/members/${memberId}`, { method: "DELETE" });
+  return data.group;
+}
+
+export async function addInvitation(groupId: string, email: string) {
+  const data = await api<{ group: Group }>(`/api/groups/${groupId}/invitations`, {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+  return data.group;
+}
+
+export async function deleteInvitation(groupId: string, invitationId: string) {
+  const data = await api<{ group: Group }>(`/api/groups/${groupId}/invitations/${invitationId}`, { method: "DELETE" });
+  return data.group;
+}
+
+export async function getInvite(code: string) {
+  return api<{ group: Group; alreadyMember: boolean }>(`/api/invites/${code}`);
+}
+
+export async function acceptInvite(code: string, name: string, email: string | null) {
+  const data = await api<{ group: Group }>(`/api/invites/${code}/accept`, {
+    method: "POST",
+    body: JSON.stringify({ name, email }),
+  });
+  return data.group;
+}
+
+export async function addExpense(groupId: string, expense: ExpensePayload) {
+  const data = await api<{ group: Group }>(`/api/groups/${groupId}/expenses`, {
+    method: "POST",
+    body: JSON.stringify(expense),
+  });
+  return data.group;
+}
+
+export async function uploadReceipt(groupId: string, file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch(`/api/groups/${groupId}/receipts`, {
+    method: "POST",
+    body: formData,
+  });
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(data?.error || "Receipt upload failed.");
+  }
+
+  return data.receipt as { path: string; url: string; name: string; type: string };
+}
+
+export async function deleteExpense(groupId: string, expenseId: string) {
+  const data = await api<{ group: Group }>(`/api/groups/${groupId}/expenses/${expenseId}`, { method: "DELETE" });
+  return data.group;
+}
+
+export async function updateExpense(groupId: string, expenseId: string, expense: ExpensePayload) {
+  const data = await api<{ group: Group }>(`/api/groups/${groupId}/expenses/${expenseId}`, {
+    method: "PATCH",
+    body: JSON.stringify(expense),
+  });
+  return data.group;
+}
+
+export async function recordSettlement(groupId: string, settlement: Settlement) {
+  const data = await api<{ group: Group }>(`/api/groups/${groupId}/settlements`, {
+    method: "POST",
+    body: JSON.stringify(settlement),
+  });
+  return data.group;
+}
+
+export async function deleteSettlement(groupId: string, settlementId: string) {
+  const data = await api<{ group: Group }>(`/api/groups/${groupId}/settlements/${settlementId}`, { method: "DELETE" });
+  return data.group;
+}
+
+export async function addDuty(groupId: string, duty: DutyPayload) {
+  const data = await api<{ group: Group }>(`/api/groups/${groupId}/duties`, {
+    method: "POST",
+    body: JSON.stringify(duty),
+  });
+  return data.group;
+}
+
+export async function updateDutyStatus(groupId: string, dutyId: string, status: Duty["status"]) {
+  const data = await api<{ group: Group }>(`/api/groups/${groupId}/duties/${dutyId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+  return data.group;
+}
+
+export async function updateDuty(groupId: string, dutyId: string, duty: Partial<DutyPayload>) {
+  const data = await api<{ group: Group }>(`/api/groups/${groupId}/duties/${dutyId}`, {
+    method: "PATCH",
+    body: JSON.stringify(duty),
+  });
+  return data.group;
+}
+
+export async function deleteDuty(groupId: string, dutyId: string) {
+  const data = await api<{ group: Group }>(`/api/groups/${groupId}/duties/${dutyId}`, { method: "DELETE" });
+  return data.group;
+}

@@ -96,6 +96,34 @@ alter table public.expense_splits enable row level security;
 alter table public.settlements enable row level security;
 alter table public.duties enable row level security;
 
+-- Personal money tracker (per-user, not shared)
+create table if not exists public.personal_transactions (
+  id uuid primary key default gen_random_uuid(),
+  profile_id uuid not null references public.profiles(id) on delete cascade,
+  type text not null default 'expense' check (type in ('expense', 'income')),
+  title text not null,
+  note text,
+  amount numeric(12, 2) not null check (amount > 0),
+  currency text not null default 'EUR',
+  category text not null default 'Other',
+  occurred_on date not null default current_date,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.personal_budgets (
+  profile_id uuid not null references public.profiles(id) on delete cascade,
+  category text not null,
+  amount numeric(12, 2) not null check (amount >= 0),
+  currency text not null default 'EUR',
+  updated_at timestamptz not null default now(),
+  primary key (profile_id, category)
+);
+
+alter table public.personal_transactions enable row level security;
+alter table public.personal_budgets enable row level security;
+
+create index if not exists personal_tx_profile_idx on public.personal_transactions(profile_id, occurred_on desc);
+
 create index if not exists groups_invite_code_idx on public.groups(invite_code);
 create index if not exists group_members_profile_idx on public.group_members(profile_id);
 create index if not exists group_invitations_group_idx on public.group_invitations(group_id, sent_at desc);

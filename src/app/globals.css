@@ -2462,6 +2462,204 @@ a.list-row:active {
   font-size: 14.5px;
 }
 
+/* ── Personal money tracker ────────────────────────────── */
+
+.personal-month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.personal-month-nav span {
+  font-weight: 750;
+  font-size: 15px;
+}
+
+.personal-month-nav button {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #fff;
+  cursor: pointer;
+  transition: background 140ms var(--ease);
+}
+
+.personal-month-nav button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.26);
+}
+
+.personal-month-nav button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.trend-chart {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  height: 150px;
+}
+
+.trend-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+.trend-bar-track {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  max-width: 34px;
+  background: var(--panel-muted);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.trend-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  min-height: 4px;
+  border-radius: 8px;
+  background: var(--line-strong);
+  transition: height 300ms var(--ease);
+}
+
+.trend-col.active .trend-bar {
+  background: linear-gradient(var(--teal-600), var(--teal-700));
+}
+
+.trend-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.trend-col.active .trend-label {
+  color: var(--teal-700);
+}
+
+.cat-list {
+  display: grid;
+  gap: 15px;
+}
+
+.cat-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.cat-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cat-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.cat-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.cat-top strong {
+  font-weight: 700;
+}
+
+.cat-bar-track {
+  height: 7px;
+  border-radius: 999px;
+  background: var(--panel-muted);
+  overflow: hidden;
+}
+
+.cat-bar {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  transition: width 300ms var(--ease);
+}
+
+.budget-list {
+  display: grid;
+  gap: 16px;
+}
+
+.budget-row {
+  display: grid;
+  gap: 7px;
+}
+
+.budget-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.budget-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.budget-name strong {
+  font-weight: 700;
+}
+
+.budget-over {
+  color: var(--danger);
+  font-weight: 800;
+}
+
+.budget-bar-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--panel-muted);
+  overflow: hidden;
+}
+
+.budget-bar {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  transition: width 300ms var(--ease);
+}
+
+.budget-warn {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--danger);
+}
+
 /* Duty rows: check toggle + tappable body */
 .duty-row {
   display: flex;

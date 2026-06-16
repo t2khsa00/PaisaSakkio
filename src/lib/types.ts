@@ -63,6 +63,23 @@ export type Group = {
   settlements: Settlement[];
 };
 
+export type PersonalTransaction = {
+  id: string;
+  type: "expense" | "income";
+  title: string;
+  note?: string;
+  amount: number;
+  currency: string;
+  category: string;
+  date: string;
+};
+
+export type PersonalBudget = {
+  category: string;
+  amount: number;
+  currency: string;
+};
+
 export type GroupSummary = {
   id: string;
   ownerId: string;

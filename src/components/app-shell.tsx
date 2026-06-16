@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton, useUser } from "@clerk/nextjs";
-import { Home, Plus, UsersRound } from "lucide-react";
+import { Home, Plus, UsersRound, Wallet } from "lucide-react";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
+  { href: "/personal", label: "Personal", icon: Wallet },
   { href: "/groups", label: "Groups", icon: UsersRound },
   { href: "/groups/create", label: "Create", icon: Plus },
 ];
@@ -127,13 +128,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </Link>
 
         <Link
-          href="/groups/create"
-          className="mobile-tab-fab"
-          aria-label="Create group"
+          href="/personal"
+          className={`mobile-tab ${isActiveHref("/personal") ? "active-tab" : ""}`}
+          aria-label="Personal"
         >
-          <span className="mobile-fab-circle">
-            <Plus size={26} strokeWidth={2.2} />
-          </span>
+          <Wallet size={22} strokeWidth={isActiveHref("/personal") ? 2.4 : 1.8} />
+          <span>Personal</span>
         </Link>
 
         <Link
@@ -143,6 +143,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         >
           <UsersRound size={22} strokeWidth={isActiveHref("/groups") ? 2.4 : 1.8} />
           <span>Groups</span>
+        </Link>
+
+        <Link
+          href="/groups/create"
+          className={`mobile-tab ${isActiveHref("/groups/create") ? "active-tab" : ""}`}
+          aria-label="New group"
+        >
+          <Plus size={22} strokeWidth={isActiveHref("/groups/create") ? 2.4 : 1.8} />
+          <span>New</span>
         </Link>
       </nav>
     </div>

@@ -1,4 +1,14 @@
-import type { Duty, Expense, Group, GroupSummary, Settlement } from "./types";
+import type { Duty, Expense, Group, GroupSummary, PersonalBudget, PersonalTransaction, Settlement } from "./types";
+
+export type PersonalTransactionPayload = {
+  type: "expense" | "income";
+  title: string;
+  note?: string;
+  amount: number;
+  currency: string;
+  category: string;
+  date: string;
+};
 
 type ExpensePayload = Omit<Expense, "id" | "currency" | "date">;
 type DutyPayload = Omit<Duty, "id">;
@@ -54,6 +64,41 @@ export async function removeMember(groupId: string, memberId: string) {
 
 export async function leaveGroup(groupId: string) {
   await api<{ ok: true }>(`/api/groups/${groupId}/leave`, { method: "POST" });
+}
+
+export async function getPersonal() {
+  return api<{ transactions: PersonalTransaction[]; budgets: PersonalBudget[] }>("/api/personal");
+}
+
+export async function addPersonalTransaction(payload: PersonalTransactionPayload) {
+  const data = await api<{ transaction: PersonalTransaction }>("/api/personal/transactions", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+  return data.transaction;
+}
+
+export async function updatePersonalTransaction(id: string, payload: PersonalTransactionPayload) {
+  const data = await api<{ transaction: PersonalTransaction }>(`/api/personal/transactions/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+  return data.transaction;
+}
+
+export async function deletePersonalTransaction(id: string) {
+  await api<{ ok: true }>(`/api/personal/transactions/${id}`, { method: "DELETE" });
+}
+
+export async function setPersonalBudget(category: string, amount: number, currency: string) {
+  await api<{ ok: true }>("/api/personal/budgets", {
+    method: "PUT",
+    body: JSON.stringify({ category, amount, currency }),
+  });
+}
+
+export async function deletePersonalBudget(category: string) {
+  await api<{ ok: true }>(`/api/personal/budgets?category=${encodeURIComponent(category)}`, { method: "DELETE" });
 }
 
 export async function addInvitation(groupId: string, email: string) {

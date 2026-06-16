@@ -2421,6 +2421,46 @@ a.list-row:active {
   height: 38px;
 }
 
+/* Leave group */
+.leave-action {
+  width: 100%;
+  margin-top: 10px;
+  color: var(--danger);
+  border-color: rgba(192, 57, 43, 0.26);
+}
+
+.leave-action:hover {
+  background: var(--danger-soft);
+  border-color: rgba(192, 57, 43, 0.4);
+}
+
+.leave-blocked {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid rgba(194, 65, 12, 0.22);
+  border-radius: var(--r-md);
+  background: var(--tomato-soft);
+}
+
+.leave-blocked-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-md);
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.65);
+  color: var(--tomato);
+}
+
+.leave-blocked strong {
+  color: var(--tomato);
+  font-size: 14.5px;
+}
+
 /* Duty rows: check toggle + tappable body */
 .duty-row {
   display: flex;

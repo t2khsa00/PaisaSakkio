@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useRef, useState } from "react";
 import {
   X,
@@ -10,6 +11,7 @@ import {
   ChevronRight,
   Circle,
   Copy,
+  LogOut,
   Pencil,
   Mail,
   Paperclip,
@@ -30,6 +32,7 @@ import {
   deleteInvitation as deleteInvitationRequest,
   deleteSettlement as deleteSettlementRequest,
   getGroup,
+  leaveGroup,
   recordSettlement as recordSettlementRequest,
   removeMember,
   updateDuty,
@@ -56,10 +59,12 @@ type ConfirmAction = {
 };
 
 export function GroupWorkspace({ accountId, groupId, initialTab }: { accountId: string; groupId: string; initialTab: Tab }) {
+  const router = useRouter();
   const [group, setGroup] = useState<Group | null>(null);
   const [tab, setTab] = useState<Tab>(initialTab);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [membersOpen, setMembersOpen] = useState(false);
+  const [leaveOpen, setLeaveOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -207,8 +212,24 @@ export function GroupWorkspace({ accountId, groupId, initialTab }: { accountId: 
             setMembersOpen(false);
             setInviteOpen(true);
           }}
+          onLeave={() => {
+            setMembersOpen(false);
+            setLeaveOpen(true);
+          }}
           onUpdate={updateGroup}
           requestConfirm={setConfirmAction}
+        />
+      )}
+      {leaveOpen && (
+        <LeaveGroupDialog
+          accountId={accountId}
+          group={group}
+          onClose={() => setLeaveOpen(false)}
+          onViewBalances={() => {
+            setLeaveOpen(false);
+            setTab("balances");
+          }}
+          onLeft={() => router.push("/groups")}
         />
       )}
       {inviteOpen && canManageGroup && <InviteDialog group={group} onClose={() => setInviteOpen(false)} onUpdate={updateGroup} />}
@@ -274,6 +295,7 @@ function MembersDialog({
   group,
   onClose,
   onOpenInvite,
+  onLeave,
   onUpdate,
   requestConfirm,
 }: {
@@ -281,10 +303,12 @@ function MembersDialog({
   group: Group;
   onClose: () => void;
   onOpenInvite: () => void;
+  onLeave: () => void;
   onUpdate: (group: Group) => void;
   requestConfirm: (action: ConfirmAction) => void;
 }) {
   const canManageGroup = isGroupOwner(group, accountId);
+  const isMemberNotOwner = !canManageGroup && group.members.some((member) => member.accountId === accountId);
 
   return (
     <div className="modal-backdrop" role="presentation" onClick={onClose}>
@@ -361,6 +385,111 @@ function MembersDialog({
           <Mail size={16} /> Invite people
         </button>
       )}
+      {isMemberNotOwner && (
+        <button className="button leave-action" onClick={onLeave} type="button">
+          <LogOut size={16} /> Leave group
+        </button>
+      )}
+      </section>
+    </div>
+  );
+}
+
+function LeaveGroupDialog({
+  accountId,
+  group,
+  onClose,
+  onViewBalances,
+  onLeft,
+}: {
+  accountId: string;
+  group: Group;
+  onClose: () => void;
+  onViewBalances: () => void;
+  onLeft: () => void;
+}) {
+  const [leaving, setLeaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const myBalance =
+    calculateMemberBalances(group).find((entry) => entry.member.accountId === accountId)?.balance ?? 0;
+  const settled = Math.abs(myBalance) <= 0.01;
+
+  async function handleLeave() {
+    if (!settled || leaving) return;
+    setLeaving(true);
+    setError(null);
+    try {
+      await leaveGroup(group.id);
+      onLeft();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Could not leave the group.");
+      setLeaving(false);
+    }
+  }
+
+  return (
+    <div className="modal-backdrop" role="presentation" onClick={onClose}>
+      <section
+        className="modal small-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="leave-dialog-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="section-head">
+          <div>
+            <p className="eyebrow">{settled ? "Leave" : "Not settled"}</p>
+            <h2 id="leave-dialog-title">Leave {group.name}?</h2>
+          </div>
+          <button className="icon-button" onClick={onClose} type="button" aria-label="Close">
+            <X size={18} />
+          </button>
+        </div>
+
+        {settled ? (
+          <>
+            <p className="muted" style={{ marginTop: 4 }}>
+              You&apos;re all settled up. Leaving removes you from this group and you&apos;ll lose access to its
+              expenses, balances, and duties.
+            </p>
+            {error && <p className="notice error">{error}</p>}
+            <div className="modal-actions">
+              <button className="button danger-solid" disabled={leaving} onClick={handleLeave} type="button">
+                <LogOut size={16} /> {leaving ? "Leaving..." : "Leave group"}
+              </button>
+              <button className="button ghost" onClick={onClose} type="button">
+                Cancel
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="leave-blocked">
+              <span className="leave-blocked-icon">
+                <Scale size={20} />
+              </span>
+              <div>
+                <strong>
+                  {myBalance < 0
+                    ? `You still owe ${Math.abs(myBalance).toFixed(2)} ${group.currency}`
+                    : `You're still owed ${myBalance.toFixed(2)} ${group.currency}`}
+                </strong>
+                <p className="muted" style={{ margin: "2px 0 0" }}>
+                  Settle up so the group stays balanced, then you can leave.
+                </p>
+              </div>
+            </div>
+            <div className="modal-actions">
+              <button className="button teal" onClick={onViewBalances} type="button">
+                <Scale size={16} /> Go to balances
+              </button>
+              <button className="button ghost" onClick={onClose} type="button">
+                Cancel
+              </button>
+            </div>
+          </>
+        )}
       </section>
     </div>
   );

@@ -4,7 +4,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import type { Duty, Expense, Group, GroupSummary, Invitation, Member, Settlement } from "@/lib/types";
-import { buildEqualShares, initials, roundMoney } from "@/lib/group-model";
+import { buildEqualShares, calculateMemberBalances, initials, roundMoney } from "@/lib/group-model";
 
 type Profile = {
   id: string;
@@ -338,6 +338,32 @@ export async function removeMemberForOwner(db: SupabaseClient, groupId: string, 
   await assertDb(db.from("group_members").delete().eq("group_id", groupId).eq("profile_id", targetProfileId));
 
   return getGroupForMember(db, groupId, actorProfileId);
+}
+
+export async function leaveGroupForMember(db: SupabaseClient, groupId: string, profileId: string) {
+  const group = await getGroupForMember(db, groupId, profileId);
+  const me = group.members.find((member) => member.id === profileId);
+
+  if (!me) throw new ApiError(404, "You are not a member of this group.");
+  if (me.role === "owner") {
+    throw new ApiError(403, "The owner cannot leave. Delete the group instead.");
+  }
+
+  const balance = calculateMemberBalances(group).find((entry) => entry.member.id === profileId)?.balance ?? 0;
+  if (Math.abs(balance) > 0.01) {
+    throw new ApiError(400, "Settle up your balance before leaving this group.");
+  }
+
+  const expenseIds = group.expenses.map((expense) => expense.id);
+  if (expenseIds.length > 0) {
+    await assertDb(db.from("expense_splits").delete().in("expense_id", expenseIds).eq("profile_id", profileId));
+  }
+
+  await assertDb(db.from("expenses").delete().eq("group_id", groupId).eq("paid_by_profile_id", profileId));
+  await assertDb(db.from("duties").delete().eq("group_id", groupId).eq("assignee_profile_id", profileId));
+  await assertDb(db.from("settlements").delete().eq("group_id", groupId).eq("from_profile_id", profileId));
+  await assertDb(db.from("settlements").delete().eq("group_id", groupId).eq("to_profile_id", profileId));
+  await assertDb(db.from("group_members").delete().eq("group_id", groupId).eq("profile_id", profileId));
 }
 
 export async function addInvitationForOwner(db: SupabaseClient, groupId: string, actorProfileId: string, email: string) {

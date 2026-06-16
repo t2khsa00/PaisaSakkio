@@ -52,6 +52,10 @@ export async function removeMember(groupId: string, memberId: string) {
   return data.group;
 }
 
+export async function leaveGroup(groupId: string) {
+  await api<{ ok: true }>(`/api/groups/${groupId}/leave`, { method: "POST" });
+}
+
 export async function addInvitation(groupId: string, email: string) {
   const data = await api<{ group: Group }>(`/api/groups/${groupId}/invitations`, {
     method: "POST",

@@ -2437,12 +2437,13 @@ a.list-row:active {
 .leave-blocked {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  margin-top: 14px;
-  padding: 14px;
+  gap: 13px;
+  margin-top: 16px;
+  padding: 16px;
   border: 1px solid rgba(194, 65, 12, 0.22);
   border-radius: var(--r-md);
   background: var(--tomato-soft);
+  line-height: 1.45;
 }
 
 .leave-blocked-icon {
@@ -2965,7 +2966,7 @@ a.list-row:active {
 .modal-actions {
   display: flex;
   gap: 10px;
-  margin-top: 4px;
+  margin-top: 18px;
 }
 
 .modal-actions .button {
@@ -3219,8 +3220,8 @@ a.list-row:active {
     max-height: 88dvh;
     border-radius: var(--r-xl) var(--r-xl) 0 0;
     border-bottom: none;
-    padding-top: max(20px, env(safe-area-inset-top, 0px));
-    padding-bottom: max(22px, env(safe-area-inset-bottom, 0px));
+    padding-top: max(22px, env(safe-area-inset-top, 0px));
+    padding-bottom: max(32px, calc(env(safe-area-inset-bottom, 0px) + 18px));
     animation: sheet-in 280ms var(--spring);
   }
 

@@ -3175,9 +3175,11 @@ a.list-row:active {
   .invite-modal {
     width: 100% !important;
     max-width: 100%;
-    max-height: 92vh;
+    max-height: 88vh;
+    max-height: 88dvh;
     border-radius: var(--r-xl) var(--r-xl) 0 0;
     border-bottom: none;
+    padding-top: max(20px, env(safe-area-inset-top, 0px));
     padding-bottom: max(22px, env(safe-area-inset-bottom, 0px));
     animation: sheet-in 280ms var(--spring);
   }

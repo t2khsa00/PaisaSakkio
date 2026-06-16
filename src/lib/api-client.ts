@@ -8,6 +8,9 @@ export type PersonalTransactionPayload = {
   currency: string;
   category: string;
   date: string;
+  receipt?: string;
+  receiptName?: string;
+  receiptType?: string;
 };
 
 type ExpensePayload = Omit<Expense, "id" | "currency" | "date">;
@@ -99,6 +102,20 @@ export async function setPersonalBudget(category: string, amount: number, curren
 
 export async function deletePersonalBudget(category: string) {
   await api<{ ok: true }>(`/api/personal/budgets?category=${encodeURIComponent(category)}`, { method: "DELETE" });
+}
+
+export async function uploadPersonalReceipt(file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch("/api/personal/receipts", { method: "POST", body: formData });
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(data?.error || "Receipt upload failed.");
+  }
+
+  return data.receipt as { path: string; url: string; name: string; type: string };
 }
 
 export async function addInvitation(groupId: string, email: string) {

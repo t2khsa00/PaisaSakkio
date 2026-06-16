@@ -72,6 +72,10 @@ export type PersonalTransaction = {
   currency: string;
   category: string;
   date: string;
+  receipt?: string;
+  receiptPath?: string;
+  receiptName?: string;
+  receiptType?: string;
 };
 
 export type PersonalBudget = {

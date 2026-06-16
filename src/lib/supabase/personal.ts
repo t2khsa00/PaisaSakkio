@@ -14,7 +14,13 @@ type TxRow = {
   currency: string;
   category: string;
   occurred_on: string;
+  receipt_path: string | null;
+  receipt_name: string | null;
+  receipt_type: string | null;
 };
+
+const TX_COLUMNS =
+  "id, type, title, note, amount, currency, category, occurred_on, receipt_path, receipt_name, receipt_type";
 
 type BudgetRow = {
   category: string;
@@ -28,7 +34,7 @@ async function check<T extends { error: { message: string } | null }>(promise: P
   return result;
 }
 
-function mapTransaction(row: TxRow): PersonalTransaction {
+function mapTransaction(row: TxRow, url?: string): PersonalTransaction {
   return {
     id: row.id,
     type: row.type,
@@ -38,7 +44,17 @@ function mapTransaction(row: TxRow): PersonalTransaction {
     currency: row.currency,
     category: row.category,
     date: row.occurred_on,
+    receipt: url ?? row.receipt_path ?? undefined,
+    receiptPath: row.receipt_path ?? undefined,
+    receiptName: row.receipt_name ?? undefined,
+    receiptType: row.receipt_type ?? undefined,
   };
+}
+
+async function signReceipt(db: SupabaseClient, path: string | null) {
+  if (!path) return undefined;
+  const { data } = await db.storage.from("receipts").createSignedUrl(path, 60 * 60);
+  return data?.signedUrl;
 }
 
 export type PersonalTransactionInput = {
@@ -49,6 +65,9 @@ export type PersonalTransactionInput = {
   currency: string;
   category: string;
   date: string;
+  receipt?: string;
+  receiptName?: string;
+  receiptType?: string;
 };
 
 export async function listPersonalData(db: SupabaseClient, profileId: string) {
@@ -56,7 +75,7 @@ export async function listPersonalData(db: SupabaseClient, profileId: string) {
     check(
       db
         .from("personal_transactions")
-        .select("id, type, title, note, amount, currency, category, occurred_on")
+        .select(TX_COLUMNS)
         .eq("profile_id", profileId)
         .order("occurred_on", { ascending: false })
         .order("created_at", { ascending: false }),
@@ -64,7 +83,17 @@ export async function listPersonalData(db: SupabaseClient, profileId: string) {
     check(db.from("personal_budgets").select("category, amount, currency").eq("profile_id", profileId)),
   ]);
 
-  const transactions = (txResult.data as TxRow[] | null)?.map(mapTransaction) ?? [];
+  const txRows = (txResult.data as TxRow[] | null) ?? [];
+  const paths = txRows.map((row) => row.receipt_path).filter((path): path is string => Boolean(path));
+  const urlByPath = new Map<string, string>();
+  if (paths.length > 0) {
+    const { data: signed } = await db.storage.from("receipts").createSignedUrls(paths, 60 * 60);
+    signed?.forEach((item) => {
+      if (item.path && item.signedUrl) urlByPath.set(item.path, item.signedUrl);
+    });
+  }
+
+  const transactions = txRows.map((row) => mapTransaction(row, row.receipt_path ? urlByPath.get(row.receipt_path) : undefined));
   const budgets: PersonalBudget[] =
     (budgetResult.data as BudgetRow[] | null)?.map((row) => ({
       category: row.category,
@@ -99,11 +128,15 @@ export async function addPersonalTransaction(db: SupabaseClient, profileId: stri
         currency: input.currency || "EUR",
         category: input.category || "Other",
         occurred_on: input.date,
+        receipt_path: input.receipt || null,
+        receipt_name: input.receiptName || null,
+        receipt_type: input.receiptType || null,
       })
-      .select("id, type, title, note, amount, currency, category, occurred_on")
+      .select(TX_COLUMNS)
       .single(),
   );
-  return mapTransaction(data as TxRow);
+  const row = data as TxRow;
+  return mapTransaction(row, await signReceipt(db, row.receipt_path));
 }
 
 export async function updatePersonalTransaction(
@@ -124,14 +157,18 @@ export async function updatePersonalTransaction(
         currency: input.currency || "EUR",
         category: input.category || "Other",
         occurred_on: input.date,
+        receipt_path: input.receipt || null,
+        receipt_name: input.receiptName || null,
+        receipt_type: input.receiptType || null,
       })
       .eq("id", id)
       .eq("profile_id", profileId)
-      .select("id, type, title, note, amount, currency, category, occurred_on")
+      .select(TX_COLUMNS)
       .single(),
   );
   if (!data) throw new ApiError(404, "Transaction not found.");
-  return mapTransaction(data as TxRow);
+  const row = data as TxRow;
+  return mapTransaction(row, await signReceipt(db, row.receipt_path));
 }
 
 export async function deletePersonalTransaction(db: SupabaseClient, profileId: string, id: string) {

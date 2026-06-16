@@ -107,8 +107,15 @@ create table if not exists public.personal_transactions (
   currency text not null default 'EUR',
   category text not null default 'Other',
   occurred_on date not null default current_date,
+  receipt_path text,
+  receipt_name text,
+  receipt_type text,
   created_at timestamptz not null default now()
 );
+
+alter table public.personal_transactions add column if not exists receipt_path text;
+alter table public.personal_transactions add column if not exists receipt_name text;
+alter table public.personal_transactions add column if not exists receipt_type text;
 
 create table if not exists public.personal_budgets (
   profile_id uuid not null references public.profiles(id) on delete cascade,

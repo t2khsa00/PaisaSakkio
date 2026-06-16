@@ -1,10 +1,12 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ChevronLeft,
   ChevronRight,
+  Paperclip,
   Plus,
+  ReceiptText,
   Target,
   TrendingDown,
   TrendingUp,
@@ -20,6 +22,7 @@ import {
   getPersonal,
   setPersonalBudget,
   updatePersonalTransaction,
+  uploadPersonalReceipt,
   type PersonalTransactionPayload,
 } from "@/lib/api-client";
 import {
@@ -267,7 +270,14 @@ export function PersonalClient() {
               return (
                 <button className="expense-row" key={tx.id} onClick={() => setEditing(tx)} type="button">
                   <span className="expense-row-thumb" style={{ background: tint(color), color }}>
-                    {tx.type === "income" ? <TrendingUp size={18} /> : <Wallet size={18} />}
+                    {tx.receipt && tx.receiptType?.startsWith("image/") ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={tx.receipt} alt="" />
+                    ) : tx.type === "income" ? (
+                      <TrendingUp size={18} />
+                    ) : (
+                      <Wallet size={18} />
+                    )}
                   </span>
                   <span className="expense-row-text">
                     <strong>{tx.title}</strong>
@@ -339,8 +349,28 @@ function TransactionDialog({
   const [category, setCategory] = useState(transaction?.category ?? "Food & Drink");
   const [date, setDate] = useState(transaction?.date ?? new Date().toISOString().slice(0, 10));
   const [note, setNote] = useState(transaction?.note ?? "");
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
+  const [keepExisting, setKeepExisting] = useState(Boolean(transaction?.receiptPath));
+  const cameraRef = useRef<HTMLInputElement | null>(null);
+  const uploadRef = useRef<HTMLInputElement | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!receiptFile || !receiptFile.type.startsWith("image/")) {
+      setReceiptPreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(receiptFile);
+    setReceiptPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [receiptFile]);
+
+  function pickReceipt(file: File | null) {
+    setReceiptFile(file);
+    setKeepExisting(false);
+  }
 
   const options = type === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
   const numericAmount = Number(amount);
@@ -369,6 +399,17 @@ function TransactionDialog({
       date,
     };
     try {
+      if (receiptFile) {
+        const uploaded = await uploadPersonalReceipt(receiptFile);
+        payload.receipt = uploaded.path;
+        payload.receiptName = uploaded.name;
+        payload.receiptType = uploaded.type;
+      } else if (keepExisting && transaction?.receiptPath) {
+        payload.receipt = transaction.receiptPath;
+        payload.receiptName = transaction.receiptName;
+        payload.receiptType = transaction.receiptType;
+      }
+
       if (transaction) {
         await updatePersonalTransaction(transaction.id, payload);
       } else {
@@ -444,6 +485,52 @@ function TransactionDialog({
             <span>Note</span>
             <textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="Optional" />
           </label>
+
+          <div className="field">
+            <span>Receipt</span>
+            <div className="receipt-actions">
+              <button className="button" onClick={() => cameraRef.current?.click()} type="button">
+                <ReceiptText size={17} /> Take photo
+              </button>
+              <button className="button" onClick={() => uploadRef.current?.click()} type="button">
+                <Paperclip size={17} /> Upload
+              </button>
+            </div>
+            <input
+              ref={cameraRef}
+              className="hidden-file-input"
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={(event) => pickReceipt(event.target.files?.[0] ?? null)}
+            />
+            <input
+              ref={uploadRef}
+              className="hidden-file-input"
+              type="file"
+              accept="image/*,.pdf"
+              onChange={(event) => pickReceipt(event.target.files?.[0] ?? null)}
+            />
+          </div>
+          {(receiptFile || (keepExisting && transaction?.receiptPath)) && (
+            <div className="receipt-preview">
+              {receiptPreview ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={receiptPreview} alt="Receipt preview" />
+              ) : !receiptFile && transaction?.receipt && transaction.receiptType?.startsWith("image/") ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={transaction.receipt} alt="Receipt" />
+              ) : (
+                <div className="file-preview">
+                  <Paperclip size={18} />
+                  <span>{receiptFile?.name ?? transaction?.receiptName ?? "Receipt attached"}</span>
+                </div>
+              )}
+              <button className="button" onClick={() => { setReceiptFile(null); setKeepExisting(false); }} type="button">
+                Remove
+              </button>
+            </div>
+          )}
 
           {error && <p className="notice error">{error}</p>}
           <div className="modal-actions">

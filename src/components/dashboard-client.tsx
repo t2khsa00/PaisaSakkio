@@ -10,19 +10,12 @@ import {
   Scale,
   UsersRound,
 } from "lucide-react";
-import { useUser } from "@clerk/nextjs";
 import { useGroupSummaries } from "@/lib/use-group-summaries";
 
 const AVATAR_COLORS = ["", "b", "c", "d"];
 
 export function DashboardClient() {
-  const { user } = useUser();
   const { groups, error, loading } = useGroupSummaries();
-  const ownerName =
-    user?.firstName ||
-    user?.username ||
-    user?.primaryEmailAddress?.emailAddress ||
-    "Me";
 
   const stats = useMemo(() => {
     const totalSpend = groups.reduce((sum, group) => sum + group.totalSpend, 0);
@@ -179,10 +172,6 @@ export function DashboardClient() {
           </div>
         )}
       </div>
-
-      <p className="muted dashboard-footnote">
-        Welcome back, {ownerName} — everything stays synced across your devices.
-      </p>
     </div>
   );
 }

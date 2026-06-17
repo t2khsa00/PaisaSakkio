@@ -118,41 +118,28 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* ── Mobile bottom tab bar ─────────────────────── */}
       <nav className="mobile-bar" aria-label="Mobile navigation">
-        <Link
-          href="/dashboard"
-          className={`mobile-tab ${isActiveHref("/dashboard") ? "active-tab" : ""}`}
-          aria-label="Home"
-        >
-          <Home size={22} strokeWidth={isActiveHref("/dashboard") ? 2.4 : 1.8} />
-          <span>Home</span>
-        </Link>
-
-        <Link
-          href="/personal"
-          className={`mobile-tab ${isActiveHref("/personal") ? "active-tab" : ""}`}
-          aria-label="Personal"
-        >
-          <Wallet size={22} strokeWidth={isActiveHref("/personal") ? 2.4 : 1.8} />
-          <span>Personal</span>
-        </Link>
-
-        <Link
-          href="/groups"
-          className={`mobile-tab ${isActiveHref("/groups") ? "active-tab" : ""}`}
-          aria-label="Groups"
-        >
-          <UsersRound size={22} strokeWidth={isActiveHref("/groups") ? 2.4 : 1.8} />
-          <span>Groups</span>
-        </Link>
-
-        <Link
-          href="/groups/create"
-          className={`mobile-tab ${isActiveHref("/groups/create") ? "active-tab" : ""}`}
-          aria-label="New group"
-        >
-          <Plus size={22} strokeWidth={isActiveHref("/groups/create") ? 2.4 : 1.8} />
-          <span>New</span>
-        </Link>
+        {[
+          { href: "/dashboard", label: "Home", icon: Home },
+          { href: "/personal", label: "Personal", icon: Wallet },
+          { href: "/groups", label: "Groups", icon: UsersRound },
+          { href: "/groups/create", label: "New", icon: Plus },
+        ].map((item) => {
+          const Icon = item.icon;
+          const active = isActiveHref(item.href);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`mobile-tab ${active ? "active-tab" : ""}`}
+              aria-label={item.label}
+            >
+              <span className="mobile-tab-icon">
+                <Icon size={21} strokeWidth={active ? 2.3 : 1.9} />
+              </span>
+              <span className="mobile-tab-label">{item.label}</span>
+            </Link>
+          );
+        })}
       </nav>
     </div>
   );

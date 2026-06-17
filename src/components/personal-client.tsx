@@ -97,7 +97,7 @@ export function PersonalClient() {
     () => transactions.filter((tx) => monthKey(tx.date) === month),
     [transactions, month],
   );
-  const maxTrend = Math.max(1, ...trend.map((entry) => Math.max(entry.expense, entry.income)));
+  const maxTrend = Math.max(1, ...trend.map((entry) => entry.expense));
   const isCurrent = month === currentMonthKey();
 
   if (loading) {
@@ -111,7 +111,7 @@ export function PersonalClient() {
   }
 
   return (
-    <div className="grid">
+    <div className="personal-page">
       {/* Net hero with month nav */}
       <section className="balance-card personal-hero">
         <div className="personal-month-nav">
@@ -146,15 +146,17 @@ export function PersonalClient() {
 
       {error && <p className="notice error">{error}</p>}
 
-      {/* Add */}
-      <button className="button teal" onClick={() => setAddOpen(true)} type="button" style={{ width: "100%", minHeight: 52 }}>
+      {/* Add (mobile only — desktop uses the Transactions header button) */}
+      <button className="button teal personal-add" onClick={() => setAddOpen(true)} type="button">
         <Plus size={18} /> Add transaction
       </button>
 
+      <div className="personal-grid">
+        <div className="personal-col">
       {/* Trend chart */}
       <section className="panel panel-pad">
         <div className="mobile-section-head" style={{ marginBottom: 14 }}>
-          <h3 className="mobile-section-title">Last 6 months</h3>
+          <h3 className="mobile-section-title">Spending — last 6 months</h3>
         </div>
         <div className="trend-chart">
           {trend.map((entry) => (
@@ -205,7 +207,9 @@ export function PersonalClient() {
           </div>
         )}
       </section>
+        </div>
 
+        <div className="personal-col">
       {/* Budgets */}
       <section className="panel panel-pad">
         <div className="mobile-section-head" style={{ marginBottom: 14 }}>
@@ -297,6 +301,8 @@ export function PersonalClient() {
           </div>
         )}
       </section>
+        </div>
+      </div>
 
       {(addOpen || editing) && (
         <TransactionDialog

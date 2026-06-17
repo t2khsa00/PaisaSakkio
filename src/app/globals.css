@@ -2464,6 +2464,31 @@ a.list-row:active {
 
 /* ── Personal money tracker ────────────────────────────── */
 
+.personal-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+.personal-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.personal-col {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  align-content: start;
+}
+
+/* Standalone add button is mobile-only; desktop uses the Transactions button */
+.personal-add {
+  display: none;
+}
+
 .personal-month-nav {
   display: flex;
   align-items: center;
@@ -2504,7 +2529,7 @@ a.list-row:active {
 .trend-chart {
   display: flex;
   align-items: stretch;
-  gap: 8px;
+  gap: 10px;
   height: 150px;
 }
 
@@ -2513,7 +2538,7 @@ a.list-row:active {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   border: 0;
   background: transparent;
   padding: 0;
@@ -2524,10 +2549,8 @@ a.list-row:active {
   position: relative;
   flex: 1;
   width: 100%;
-  max-width: 34px;
-  background: var(--panel-muted);
-  border-radius: 8px;
-  overflow: hidden;
+  max-width: 30px;
+  border-bottom: 1px solid var(--line);
 }
 
 .trend-bar {
@@ -2535,14 +2558,18 @@ a.list-row:active {
   left: 0;
   right: 0;
   bottom: 0;
-  min-height: 4px;
-  border-radius: 8px;
-  background: var(--line-strong);
-  transition: height 300ms var(--ease);
+  min-height: 3px;
+  border-radius: 7px 7px 0 0;
+  background: var(--teal-soft);
+  transition: height 320ms var(--ease);
+}
+
+.trend-col:hover .trend-bar {
+  background: #bfe6de;
 }
 
 .trend-col.active .trend-bar {
-  background: linear-gradient(var(--teal-600), var(--teal-700));
+  background: linear-gradient(var(--teal), var(--teal-700));
 }
 
 .trend-label {
@@ -3292,6 +3319,16 @@ a.list-row:active {
 
   .quick-actions {
     grid-template-columns: repeat(3, 1fr);
+  }
+
+  .personal-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .personal-add {
+    display: inline-flex;
+    width: 100%;
+    min-height: 52px;
   }
 
   .setup-page {

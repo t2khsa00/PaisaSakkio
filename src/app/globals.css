@@ -742,6 +742,43 @@ h3 {
   transform: scale(0.96);
 }
 
+.group-hero-title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.group-hero-title-row .group-hero-name {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.group-hero-edit {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: transform 120ms var(--spring), background 140ms var(--ease);
+}
+
+.group-hero-edit:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.group-hero-edit:active {
+  transform: scale(0.94);
+}
+
 /* Group stat cards: a tidy, even row of 3 that stays compact on phones.
    Higher specificity so it beats the max-width:560 .mobile-stat-row rule. */
 .mobile-stat-row.group-stats {

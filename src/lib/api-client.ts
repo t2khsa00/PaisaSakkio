@@ -60,6 +60,14 @@ export async function deleteGroup(groupId: string) {
   await api<{ ok: true }>(`/api/groups/${groupId}`, { method: "DELETE" });
 }
 
+export async function renameGroup(groupId: string, name: string) {
+  const data = await api<{ group: Group }>(`/api/groups/${groupId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ name }),
+  });
+  return data.group;
+}
+
 export async function removeMember(groupId: string, memberId: string) {
   const data = await api<{ group: Group }>(`/api/groups/${groupId}/members/${memberId}`, { method: "DELETE" });
   return data.group;

@@ -318,6 +318,15 @@ export async function deleteGroupForOwner(db: SupabaseClient, groupId: string, p
   if (error) throw new ApiError(500, error.message);
 }
 
+export async function renameGroupForOwner(db: SupabaseClient, groupId: string, profileId: string, name: string) {
+  await requireOwner(db, groupId, profileId);
+  const cleanName = name.trim();
+  if (!cleanName) throw new ApiError(400, "Group name is required.");
+
+  await assertDb(db.from("groups").update({ name: cleanName }).eq("id", groupId));
+  return getGroupForMember(db, groupId, profileId);
+}
+
 export async function removeMemberForOwner(db: SupabaseClient, groupId: string, targetProfileId: string, actorProfileId: string) {
   await requireOwner(db, groupId, actorProfileId);
   const group = await getGroupForMember(db, groupId, actorProfileId);

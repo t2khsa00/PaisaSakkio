@@ -35,6 +35,7 @@ import {
   leaveGroup,
   recordSettlement as recordSettlementRequest,
   removeMember,
+  renameGroup,
   updateDuty,
   updateDutyStatus,
   updateExpense as updateExpenseRequest,
@@ -64,6 +65,7 @@ export function GroupWorkspace({ accountId, groupId, initialTab }: { accountId: 
   const [tab, setTab] = useState<Tab>(initialTab);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [membersOpen, setMembersOpen] = useState(false);
+  const [renameOpen, setRenameOpen] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
   const [loading, setLoading] = useState(true);
@@ -124,7 +126,14 @@ export function GroupWorkspace({ accountId, groupId, initialTab }: { accountId: 
   return (
     <div className="grid">
       <section className="balance-card group-hero">
-        <h1 className="group-hero-name">{group.name}</h1>
+        <div className="group-hero-title-row">
+          <h1 className="group-hero-name">{group.name}</h1>
+          {canManageGroup && (
+            <button className="group-hero-edit" onClick={() => setRenameOpen(true)} type="button" aria-label="Rename group">
+              <Pencil size={16} />
+            </button>
+          )}
+        </div>
 
         <p className="group-hero-label">Total spend · {group.currency}</p>
         <p className="group-hero-amount">
@@ -233,6 +242,16 @@ export function GroupWorkspace({ accountId, groupId, initialTab }: { accountId: 
         />
       )}
       {inviteOpen && canManageGroup && <InviteDialog group={group} onClose={() => setInviteOpen(false)} onUpdate={updateGroup} />}
+      {renameOpen && canManageGroup && (
+        <RenameGroupDialog
+          group={group}
+          onClose={() => setRenameOpen(false)}
+          onSaved={(nextGroup) => {
+            updateGroup(nextGroup);
+            setRenameOpen(false);
+          }}
+        />
+      )}
       {confirmAction && (
         <ConfirmDialog
           action={confirmAction}
@@ -285,6 +304,75 @@ function GroupWorkspaceSkeleton() {
           <div className="expense-row loading-row" />
           <div className="expense-row loading-row" />
         </div>
+      </section>
+    </div>
+  );
+}
+
+function RenameGroupDialog({
+  group,
+  onClose,
+  onSaved,
+}: {
+  group: Group;
+  onClose: () => void;
+  onSaved: (group: Group) => void;
+}) {
+  const [name, setName] = useState(group.name);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const cleanName = name.trim();
+  const canSave = cleanName.length > 0 && cleanName !== group.name && !saving;
+
+  async function handleSave(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!canSave) return;
+
+    setSaving(true);
+    setError(null);
+
+    try {
+      onSaved(await renameGroup(group.id, cleanName));
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Could not rename group.");
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="modal-backdrop" role="presentation" onClick={onClose}>
+      <section
+        className="modal small-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="rename-group-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="section-head">
+          <div>
+            <p className="eyebrow">Group settings</p>
+            <h2 id="rename-group-title">Rename group</h2>
+          </div>
+          <button className="icon-button" onClick={onClose} type="button" aria-label="Close rename dialog">
+            <X size={18} />
+          </button>
+        </div>
+
+        <form className="form-grid form-offset" onSubmit={handleSave}>
+          <label className="field">
+            <span>Group name</span>
+            <input autoFocus value={name} onChange={(event) => setName(event.target.value)} placeholder="202 Flat" />
+          </label>
+          {error && <p className="notice error">{error}</p>}
+          <div className="modal-actions">
+            <button className="button teal" disabled={!canSave} type="submit">
+              {saving ? "Saving..." : "Save name"}
+            </button>
+            <button className="button ghost" onClick={onClose} type="button">
+              Cancel
+            </button>
+          </div>
+        </form>
       </section>
     </div>
   );

@@ -2470,18 +2470,17 @@ a.list-row:active {
   gap: 16px;
 }
 
-.personal-grid {
+.personal-insights {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
-  align-items: start;
+  align-items: stretch;
 }
 
-.personal-col {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 16px;
-  align-content: start;
+@media (max-width: 1080px) {
+  .personal-insights {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
 }
 
 /* Standalone add button is mobile-only; desktop uses the Transactions button */
@@ -3337,7 +3336,7 @@ a.list-row:active {
     grid-template-columns: repeat(3, 1fr);
   }
 
-  .personal-grid {
+  .personal-insights {
     grid-template-columns: minmax(0, 1fr);
   }
 

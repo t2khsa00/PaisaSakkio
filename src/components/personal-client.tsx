@@ -151,8 +151,7 @@ export function PersonalClient() {
         <Plus size={18} /> Add transaction
       </button>
 
-      <div className="personal-grid">
-        <div className="personal-col">
+      <div className="personal-insights">
       {/* Trend chart */}
       <section className="panel panel-pad">
         <div className="mobile-section-head" style={{ marginBottom: 14 }}>
@@ -207,9 +206,7 @@ export function PersonalClient() {
           </div>
         )}
       </section>
-        </div>
 
-        <div className="personal-col">
       {/* Budgets */}
       <section className="panel panel-pad">
         <div className="mobile-section-head" style={{ marginBottom: 14 }}>
@@ -253,8 +250,9 @@ export function PersonalClient() {
           </div>
         )}
       </section>
+      </div>
 
-      {/* Transactions */}
+      {/* Transactions (full width — grows downward) */}
       <section className="panel panel-pad">
         <div className="mobile-section-head" style={{ marginBottom: 14 }}>
           <h3 className="mobile-section-title">Transactions</h3>
@@ -301,8 +299,6 @@ export function PersonalClient() {
           </div>
         )}
       </section>
-        </div>
-      </div>
 
       {(addOpen || editing) && (
         <TransactionDialog

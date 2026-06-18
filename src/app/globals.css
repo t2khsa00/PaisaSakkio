@@ -1968,6 +1968,20 @@ a.list-row:active {
   text-overflow: ellipsis;
 }
 
+/* Personal transaction rows: stacked category + date lines (mockup style) */
+.expense-row-text > .muted {
+  font-size: 12.5px;
+  font-weight: 650;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.expense-row-text > .expense-row-date {
+  margin-top: -2px;
+}
+
 .expense-row-meta {
   display: flex;
   align-items: center;
@@ -2507,17 +2521,553 @@ a.list-row:active {
   gap: 16px;
 }
 
-.personal-insights {
+/* ── Top band: hero (wide) + three stat cards ─────────────── */
+.personal-top {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1.7fr) repeat(3, minmax(0, 1fr));
   gap: 16px;
   align-items: stretch;
 }
 
 @media (max-width: 1080px) {
-  .personal-insights {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  .personal-top {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  .personal-top > .personal-hero {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 560px) {
+  .personal-top {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ── Main grid: trend | budgets | recent(tall), category | cashflow | ──
+   Rows align across columns. Each card is a flex column whose footer /
+   chart fills the bottom, so a stretched card reads as intentional
+   instead of an empty box. */
+.personal-main {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-areas:
+    "trend budgets recent"
+    "category cashflow recent";
+  align-items: stretch;
+}
+
+.pm-trend,
+.pm-budgets,
+.pm-recent,
+.pm-category,
+.pm-cashflow {
+  display: flex;
+  flex-direction: column;
+}
+
+.pm-trend {
+  grid-area: trend;
+}
+.pm-budgets {
+  grid-area: budgets;
+}
+.pm-recent {
+  grid-area: recent;
+}
+.pm-category {
+  grid-area: category;
+}
+.pm-cashflow {
+  grid-area: cashflow;
+}
+
+/* Chart, donut and cash-flow hint grow to fill stretched height */
+.pm-trend .trend-chart {
+  flex: 1;
+  min-height: 150px;
+}
+
+.pm-category .donut-layout {
+  flex: 1;
+}
+
+.pm-cashflow .cashflow-hint {
+  margin-top: auto;
+}
+
+/* Weekly / Monthly segmented filter */
+.segmented {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--panel-muted);
+  border: 1px solid var(--line);
+}
+
+.segmented-btn {
+  border: 0;
+  background: none;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+  transition:
+    background 140ms var(--ease),
+    color 140ms var(--ease),
+    box-shadow 140ms var(--ease);
+}
+
+.segmented-btn:hover {
+  color: var(--ink-soft);
+}
+
+.segmented-btn.active {
+  background: var(--panel-raised);
+  color: var(--teal-700);
+  box-shadow: var(--shadow-sm);
+}
+
+.cashflow-period {
+  margin: -6px 0 12px;
+  font-size: 12.5px;
+  font-weight: 650;
+}
+
+/* Header "View all" link */
+.card-link {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--teal);
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.card-link:hover {
+  color: var(--teal-700);
+  text-decoration: underline;
+}
+
+/* Full-width action anchored to the bottom of a card */
+.card-foot-btn {
+  width: 100%;
+  margin-top: auto;
+  justify-content: center;
+}
+
+.pm-recent .expense-list,
+.pm-budgets .budget-list {
+  margin-bottom: 16px;
+}
+
+/* Scrollable body inside the "view all" modals */
+.modal-scroll-list {
+  max-height: min(62vh, 540px);
+  overflow-y: auto;
+  margin: 4px -6px 0;
+  padding: 0 6px;
+}
+
+/* Tablet: two columns, recent drops full-width below */
+@media (max-width: 1080px) {
+  .personal-main {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      "trend budgets"
+      "category cashflow"
+      "recent recent";
+  }
+}
+
+/* Mobile: single column, recent first */
+@media (max-width: 640px) {
+  .personal-main {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "recent"
+      "trend"
+      "category"
+      "budgets"
+      "cashflow";
+  }
+}
+
+/* ── Hero extras: delta pill, income/expense tiles ────────────── */
+.hero-delta {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: -8px 0 18px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 750;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.hero-tiles {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.hero-tile {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 13px;
+  border-radius: var(--r-md);
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(6px);
+}
+
+.hero-tile-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.18);
+  flex-shrink: 0;
+}
+
+.hero-tile-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.hero-tile-text small {
+  font-size: 11.5px;
+  font-weight: 650;
+  opacity: 0.78;
+}
+
+.hero-tile-text strong {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+/* ── Stat cards (savings / goal / bill) ───────────────────── */
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  padding: 18px;
+  text-align: left;
+}
+
+.stat-card--button {
+  cursor: pointer;
+  border: 1px solid var(--line);
+  transition:
+    box-shadow 160ms var(--ease),
+    transform 160ms var(--ease),
+    border-color 160ms var(--ease);
+}
+
+.stat-card--button:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--line-strong);
+  transform: translateY(-2px);
+}
+
+.stat-card--ring {
+  align-items: center;
+}
+
+.stat-card--ring .stat-title {
+  align-self: stretch;
+}
+
+.stat-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 750;
+  color: var(--ink);
+}
+
+.stat-title-icon {
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.stat-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--teal-soft);
+  color: var(--teal-700);
+}
+
+.stat-icon.teal {
+  background: var(--teal-soft);
+  color: var(--teal-700);
+}
+
+.stat-label {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.stat-big {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 850;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+
+.stat-big-cur {
+  font-size: 0.52em;
+  font-weight: 700;
+  color: var(--muted);
+  margin-left: 2px;
+}
+
+.stat-bar-track {
+  height: 7px;
+  border-radius: 999px;
+  background: var(--panel-muted);
+  overflow: hidden;
+}
+
+.stat-bar {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--teal), var(--teal-600));
+  transition: width 320ms var(--ease);
+}
+
+.stat-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  margin-top: auto;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.stat-foot--center {
+  justify-content: center;
+  text-align: center;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.stat-foot .due-soon {
+  color: var(--tomato);
+}
+
+.stat-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  flex: 1;
+  min-height: 120px;
+  color: var(--muted);
+  text-align: center;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+/* ── Progress ring (savings rate) ─────────────────────────── */
+.ring-wrap {
+  position: relative;
+  margin: 6px auto;
+}
+
+.ring-wrap .ring-center {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
+.ring-track {
+  stroke: var(--panel-muted);
+}
+
+.ring-fill {
+  transition: stroke-dashoffset 480ms var(--ease);
+}
+
+.ring-value {
+  font-size: 24px;
+  font-weight: 850;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+
+/* ── Donut (spending by category) ─────────────────────────── */
+.donut-layout {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.donut-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.donut-wrap .ring-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+}
+
+.donut-total-val {
+  font-size: 14px;
+  font-weight: 850;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.donut-total-label {
+  font-size: 10.5px;
+  font-weight: 650;
+  color: var(--muted);
+}
+
+.donut-legend {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.legend-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+}
+
+.legend-name {
+  font-weight: 700;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.legend-amt {
+  font-weight: 750;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.legend-pct {
+  min-width: 34px;
+  text-align: right;
+  font-weight: 700;
+}
+
+/* Very narrow cards: stack the donut above the legend */
+@media (max-width: 460px) {
+  .donut-layout {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .donut-wrap {
+    align-self: center;
+  }
+}
+
+/* ── Cash flow ────────────────────────────────────────────── */
+.cashflow-list {
+  display: grid;
+  gap: 2px;
+}
+
+.cashflow-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 0;
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--ink-soft);
+}
+
+.cashflow-row + .cashflow-row {
+  border-top: 1px solid var(--line);
+}
+
+.cashflow-row strong {
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.cf-pos {
+  color: var(--green);
+}
+
+.cf-neg {
+  color: var(--danger);
+}
+
+.cashflow-net {
+  margin-top: 4px;
+  padding-top: 14px;
+  border-top: 1.5px solid var(--line-strong) !important;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.cashflow-hint {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: var(--r-md);
+  background: var(--teal-tint);
+  color: var(--teal-700);
+  font-size: 12.5px;
+  font-weight: 650;
+}
+
+.cashflow-hint svg {
+  flex-shrink: 0;
 }
 
 /* Standalone add button is mobile-only; desktop uses the Transactions button */
@@ -2672,12 +3222,12 @@ a.list-row:active {
 
 .budget-list {
   display: grid;
-  gap: 16px;
+  gap: 18px;
 }
 
 .budget-row {
   display: grid;
-  gap: 7px;
+  gap: 9px;
 }
 
 .budget-top {
@@ -2691,19 +3241,48 @@ a.list-row:active {
 .budget-name {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
+  gap: 11px;
+  min-width: 0;
 }
 
 .budget-name strong {
   font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.budget-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.budget-amts {
+  font-weight: 700;
+  font-size: 13px;
+  white-space: nowrap;
 }
 
 .budget-over {
   color: var(--danger);
   font-weight: 800;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.budget-bottom {
+  display: flex;
+  align-items: center;
+  gap: 11px;
 }
 
 .budget-bar-track {
+  flex: 1;
   height: 8px;
   border-radius: 999px;
   background: var(--panel-muted);
@@ -2715,6 +3294,18 @@ a.list-row:active {
   height: 100%;
   border-radius: 999px;
   transition: width 300ms var(--ease);
+}
+
+.budget-pct {
+  min-width: 38px;
+  text-align: right;
+  font-size: 12.5px;
+  font-weight: 750;
+  color: var(--muted);
+}
+
+.budget-pct.over {
+  color: var(--danger);
 }
 
 .budget-warn {
@@ -3371,10 +3962,6 @@ a.list-row:active {
 
   .quick-actions {
     grid-template-columns: repeat(3, 1fr);
-  }
-
-  .personal-insights {
-    grid-template-columns: minmax(0, 1fr);
   }
 
   .personal-add {

@@ -84,6 +84,20 @@ export type PersonalBudget = {
   currency: string;
 };
 
+export type PersonalGoal = {
+  amount: number;
+  currency: string;
+};
+
+export type PersonalBill = {
+  id: string;
+  name: string;
+  amount: number;
+  currency: string;
+  category: string;
+  dueDay: number;
+};
+
 export type GroupSummary = {
   id: string;
   ownerId: string;

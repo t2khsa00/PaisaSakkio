@@ -1,7 +1,7 @@
 import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { PersonalBudget, PersonalTransaction } from "@/lib/types";
+import type { PersonalBill, PersonalBudget, PersonalGoal, PersonalTransaction } from "@/lib/types";
 import { ApiError } from "@/lib/supabase/groups";
 import { roundMoney } from "@/lib/group-model";
 
@@ -26,6 +26,20 @@ type BudgetRow = {
   category: string;
   amount: number | string;
   currency: string;
+};
+
+type GoalRow = {
+  amount: number | string;
+  currency: string;
+};
+
+type BillRow = {
+  id: string;
+  name: string;
+  amount: number | string;
+  currency: string;
+  category: string;
+  due_day: number;
 };
 
 async function check<T extends { error: { message: string } | null }>(promise: PromiseLike<T>) {
@@ -71,7 +85,7 @@ export type PersonalTransactionInput = {
 };
 
 export async function listPersonalData(db: SupabaseClient, profileId: string) {
-  const [txResult, budgetResult] = await Promise.all([
+  const [txResult, budgetResult, goalResult, billResult] = await Promise.all([
     check(
       db
         .from("personal_transactions")
@@ -81,6 +95,12 @@ export async function listPersonalData(db: SupabaseClient, profileId: string) {
         .order("created_at", { ascending: false }),
     ),
     check(db.from("personal_budgets").select("category, amount, currency").eq("profile_id", profileId)),
+    db.from("personal_goal").select("amount, currency").eq("profile_id", profileId).maybeSingle(),
+    db
+      .from("personal_bills")
+      .select("id, name, amount, currency, category, due_day")
+      .eq("profile_id", profileId)
+      .order("due_day", { ascending: true }),
   ]);
 
   const txRows = (txResult.data as TxRow[] | null) ?? [];
@@ -101,7 +121,22 @@ export async function listPersonalData(db: SupabaseClient, profileId: string) {
       currency: row.currency,
     })) ?? [];
 
-  return { transactions, budgets };
+  const goalRow = goalResult.data as GoalRow | null;
+  const goal: PersonalGoal | null = goalRow
+    ? { amount: Number(goalRow.amount), currency: goalRow.currency }
+    : null;
+
+  const bills: PersonalBill[] =
+    (billResult.data as BillRow[] | null)?.map((row) => ({
+      id: row.id,
+      name: row.name,
+      amount: Number(row.amount),
+      currency: row.currency,
+      category: row.category,
+      dueDay: row.due_day,
+    })) ?? [];
+
+  return { transactions, budgets, goal, bills };
 }
 
 function validate(input: PersonalTransactionInput) {
@@ -197,4 +232,61 @@ export async function setPersonalBudget(
 
 export async function deletePersonalBudget(db: SupabaseClient, profileId: string, category: string) {
   await check(db.from("personal_budgets").delete().eq("profile_id", profileId).eq("category", category));
+}
+
+export async function setPersonalGoal(db: SupabaseClient, profileId: string, amount: number, currency: string) {
+  const value = roundMoney(Number(amount));
+  if (!Number.isFinite(value) || value < 0) throw new ApiError(400, "Enter a goal of 0 or more.");
+  if (value === 0) {
+    await check(db.from("personal_goal").delete().eq("profile_id", profileId));
+    return;
+  }
+  await check(
+    db.from("personal_goal").upsert(
+      { profile_id: profileId, amount: value, currency: currency || "EUR", updated_at: new Date().toISOString() },
+      { onConflict: "profile_id" },
+    ),
+  );
+}
+
+export type PersonalBillInput = {
+  name: string;
+  amount: number;
+  currency: string;
+  category: string;
+  dueDay: number;
+};
+
+function validateBill(input: PersonalBillInput) {
+  const name = input.name.trim();
+  const amount = roundMoney(Number(input.amount));
+  const dueDay = Math.trunc(Number(input.dueDay));
+  if (!name) throw new ApiError(400, "Bill name is required.");
+  if (!Number.isFinite(amount) || amount <= 0) throw new ApiError(400, "Enter an amount above 0.");
+  if (!Number.isFinite(dueDay) || dueDay < 1 || dueDay > 31) throw new ApiError(400, "Due day must be 1–31.");
+  return { name, amount, dueDay };
+}
+
+export async function addPersonalBill(db: SupabaseClient, profileId: string, input: PersonalBillInput): Promise<PersonalBill> {
+  const { name, amount, dueDay } = validateBill(input);
+  const { data } = await check(
+    db
+      .from("personal_bills")
+      .insert({
+        profile_id: profileId,
+        name,
+        amount,
+        currency: input.currency || "EUR",
+        category: input.category || "Bills",
+        due_day: dueDay,
+      })
+      .select("id, name, amount, currency, category, due_day")
+      .single(),
+  );
+  const row = data as BillRow;
+  return { id: row.id, name: row.name, amount: Number(row.amount), currency: row.currency, category: row.category, dueDay: row.due_day };
+}
+
+export async function deletePersonalBill(db: SupabaseClient, profileId: string, id: string) {
+  await check(db.from("personal_bills").delete().eq("id", id).eq("profile_id", profileId));
 }

@@ -1,4 +1,4 @@
-import type { Duty, Expense, Group, GroupSummary, PersonalBudget, PersonalTransaction, Settlement } from "./types";
+import type { Duty, Expense, Group, GroupSummary, PersonalBill, PersonalBudget, PersonalGoal, PersonalTransaction, Settlement } from "./types";
 
 export type PersonalTransactionPayload = {
   type: "expense" | "income";
@@ -78,7 +78,12 @@ export async function leaveGroup(groupId: string) {
 }
 
 export async function getPersonal() {
-  return api<{ transactions: PersonalTransaction[]; budgets: PersonalBudget[] }>("/api/personal");
+  return api<{
+    transactions: PersonalTransaction[];
+    budgets: PersonalBudget[];
+    goal: PersonalGoal | null;
+    bills: PersonalBill[];
+  }>("/api/personal");
 }
 
 export async function addPersonalTransaction(payload: PersonalTransactionPayload) {
@@ -110,6 +115,33 @@ export async function setPersonalBudget(category: string, amount: number, curren
 
 export async function deletePersonalBudget(category: string) {
   await api<{ ok: true }>(`/api/personal/budgets?category=${encodeURIComponent(category)}`, { method: "DELETE" });
+}
+
+export async function setPersonalGoal(amount: number, currency: string) {
+  await api<{ ok: true }>("/api/personal/goal", {
+    method: "PUT",
+    body: JSON.stringify({ amount, currency }),
+  });
+}
+
+export type PersonalBillPayload = {
+  name: string;
+  amount: number;
+  currency: string;
+  category: string;
+  dueDay: number;
+};
+
+export async function addPersonalBill(payload: PersonalBillPayload) {
+  const data = await api<{ bill: PersonalBill }>("/api/personal/bills", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+  return data.bill;
+}
+
+export async function deletePersonalBill(id: string) {
+  await api<{ ok: true }>(`/api/personal/bills?id=${encodeURIComponent(id)}`, { method: "DELETE" });
 }
 
 export async function uploadPersonalReceipt(file: File) {

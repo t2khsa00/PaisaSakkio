@@ -32,6 +32,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { PersonalBill, PersonalBudget, PersonalGoal, PersonalTransaction } from "@/lib/types";
+import { parseAmount } from "@/lib/group-model";
 import {
   addPersonalBill,
   addPersonalTransaction,
@@ -859,7 +860,7 @@ function TransactionDialog({
   }
 
   const options = type === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
-  const numericAmount = Number(amount);
+  const numericAmount = parseAmount(amount);
   const canSave = title.trim().length > 0 && Number.isFinite(numericAmount) && numericAmount > 0;
 
   function switchType(next: "expense" | "income") {
@@ -1056,7 +1057,7 @@ function BudgetDialog({
 
   async function handleSave(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const value = Number(amount);
+    const value = parseAmount(amount);
     if (!Number.isFinite(value) || value <= 0 || saving) return;
     setSaving(true);
     setError(null);
@@ -1160,7 +1161,7 @@ function GoalDialog({
   const [amount, setAmount] = useState(goal ? goal.amount.toString() : "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const value = Number(amount);
+  const value = parseAmount(amount);
   const canSave = Number.isFinite(value) && value > 0;
 
   async function handleSave(event: FormEvent<HTMLFormElement>) {
@@ -1241,7 +1242,7 @@ function BillsDialog({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const amountValue = Number(amount);
+  const amountValue = parseAmount(amount);
   const dayValue = Number(dueDay);
   const canSave =
     name.trim().length > 0 &&

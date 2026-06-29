@@ -25,6 +25,16 @@ export function roundMoney(value: number) {
   return Math.round((value + Number.EPSILON) * 100) / 100;
 }
 
+// Accepts amounts typed with either a comma or a dot as the decimal separator
+// (e.g. Finnish "12,50" or "12.50"). Returns NaN for anything not numeric.
+export function parseAmount(value: string | number | null | undefined) {
+  if (typeof value === "number") return value;
+  if (value == null) return NaN;
+  const normalized = value.trim().replace(/\s/g, "").replace(",", ".");
+  if (normalized === "") return NaN;
+  return Number(normalized);
+}
+
 export function buildEqualShares(amount: number, participants: string[]) {
   if (participants.length === 0) return {};
 

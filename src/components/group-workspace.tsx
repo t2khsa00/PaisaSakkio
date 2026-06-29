@@ -48,6 +48,7 @@ import {
   isAccountMember,
   isGroupOwner,
   memberName,
+  parseAmount,
   roundMoney,
 } from "@/lib/group-model";
 
@@ -630,10 +631,10 @@ function ExpensesPanel({
       dateTo: expenseDateTo,
     }),
   );
-  const numericAmount = Number(amount);
+  const numericAmount = parseAmount(amount);
   const selectedMembers = group.members.filter((member) => participantIds.includes(member.id));
   const equalShares = Number.isFinite(numericAmount) && numericAmount > 0 ? buildEqualShares(numericAmount, participantIds) : {};
-  const customTotal = selectedMembers.reduce((sum, member) => sum + Number(customShares[member.id] || 0), 0);
+  const customTotal = selectedMembers.reduce((sum, member) => sum + (parseAmount(customShares[member.id]) || 0), 0);
   const customDifference = Number.isFinite(numericAmount) ? roundMoney(numericAmount - customTotal) : 0;
   const expenseFilterOptions = [
     { value: "all", label: "All" },
@@ -687,7 +688,7 @@ function ExpensesPanel({
     try {
       const shares =
         splitType === "custom"
-          ? Object.fromEntries(selectedMembers.map((member) => [member.id, roundMoney(Number(customShares[member.id] || 0))]))
+          ? Object.fromEntries(selectedMembers.map((member) => [member.id, roundMoney(parseAmount(customShares[member.id]) || 0)]))
           : buildEqualShares(numericAmount, participantIds);
       const uploadedReceipt = receiptFile ? await uploadReceipt(group.id, receiptFile) : null;
       const localPatch = cleanExpensePatch({
@@ -1158,10 +1159,10 @@ function ExpenseDetailDialog({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const payer = memberName(group, expense.paidBy);
-  const numericAmount = Number(amount);
+  const numericAmount = parseAmount(amount);
   const selectedMembers = group.members.filter((member) => participantIds.includes(member.id));
   const equalShares = Number.isFinite(numericAmount) && numericAmount > 0 ? buildEqualShares(numericAmount, participantIds) : {};
-  const customTotal = selectedMembers.reduce((sum, member) => sum + Number(customShares[member.id] || 0), 0);
+  const customTotal = selectedMembers.reduce((sum, member) => sum + (parseAmount(customShares[member.id]) || 0), 0);
   const customDifference = Number.isFinite(numericAmount) ? roundMoney(numericAmount - customTotal) : 0;
   const canSave =
     title.trim().length > 0 &&
@@ -1222,7 +1223,7 @@ function ExpenseDetailDialog({
     try {
       const shares =
         splitType === "custom"
-          ? Object.fromEntries(selectedMembers.map((member) => [member.id, roundMoney(Number(customShares[member.id] || 0))]))
+          ? Object.fromEntries(selectedMembers.map((member) => [member.id, roundMoney(parseAmount(customShares[member.id]) || 0)]))
           : buildEqualShares(numericAmount, participantIds);
       const uploadedReceipt = receiptFile ? await uploadReceipt(group.id, receiptFile) : null;
       const existingReceiptPath = expense.receiptPath ?? (expense.receipt?.startsWith("http") ? undefined : expense.receipt);
@@ -1935,7 +1936,7 @@ function reasonFromTitles(titles: string[]) {
 }
 
 function paymentAmountForItem(item: { expense: Expense; amount: number }, paymentAmounts: Record<string, string>) {
-  return roundMoney(Number(paymentAmounts[item.expense.id] || 0));
+  return roundMoney(parseAmount(paymentAmounts[item.expense.id]) || 0);
 }
 
 function paymentReasonFromItems(items: { expense: Expense; amount: number }[], paymentAmounts: Record<string, string>, currency: string) {
